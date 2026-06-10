@@ -70,6 +70,13 @@ void DummyPlayer_Init(Actor* actor, PlayState* play) {
     Player_SetModelGroup(player, Player_ActionToModelGroup(player, player->heldItemAction));
     play->playerInit(player, play, gPlayerSkelHeaders[client.linkAge]);
 
+    // playerInit grabs one of the 25 blure slots for the sword trail, but we never
+    // draw trails for other players. Free it so a busy lobby doesn't use up every slot
+    // (which makes all weapon trails vanish and crashes the Dark Link fight).
+    Effect_Delete(play, player->meleeWeaponEffectIndex);
+    // mark as not held
+    player->meleeWeaponEffectIndex = TOTAL_EFFECT_COUNT;
+
     play->func_11D54(player, play);
     // #endregion
 
@@ -243,6 +250,11 @@ void DummyPlayer_Draw(Actor* actor, PlayState* play) {
 }
 
 void DummyPlayer_Destroy(Actor* actor, PlayState* play) {
+    Player* player = (Player*)actor;
+
+    // Free the sword trail slot like Player_Destroy does (no-op if Init already freed it).
+    Effect_Delete(play, player->meleeWeaponEffectIndex);
+
     // DummyPlayer Actors are initially spawned as ACTOR_PLAYER, but change their
     // ID shortly afterwards to ACTOR_EN_OE2. This would cause ACTOR_PLAYER's
     // ActorDB Entry's `numLoaded` to leak, which is mostly harmless but hits debug
