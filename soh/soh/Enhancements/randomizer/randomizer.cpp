@@ -242,12 +242,6 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerCheck(Randomizer
 }
 
 ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGet randoGet) {
-    if (Rando::StaticData::RandoGetToRandInf.find(randoGet) != Rando::StaticData::RandoGetToRandInf.end()) {
-        return Flags_GetRandomizerInf((RandomizerInf)Rando::StaticData::RandoGetToRandInf.find(randoGet)->second)
-                   ? CANT_OBTAIN_ALREADY_HAVE
-                   : CAN_OBTAIN;
-    }
-
     // This is needed since Plentiful item pool also adds a third progressive wallet
     // but we should not get Tycoon's Wallet from it if it is off.
     bool tycoonWallet = GetRandoSettingValue(RSK_INCLUDE_TYCOON_WALLET);
@@ -444,7 +438,6 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
         case RG_BOTTLE_WITH_BLUE_FIRE:
         case RG_BOTTLE_WITH_BUGS:
         case RG_BOTTLE_WITH_POE:
-        case RG_RUTOS_LETTER:
         case RG_BOTTLE_WITH_BIG_POE:
             return Inventory_HasEmptyBottleSlot() ? CAN_OBTAIN : CANT_OBTAIN_ALREADY_HAVE;
 
@@ -469,6 +462,9 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
         // Trade Items
         // case RG_PROGRESSIVE_GORONSWORD:
         // case RG_GIANTS_KNIFE:
+        case RG_ZELDAS_LETTER:
+            return Flags_GetRandomizerInf(RAND_INF_CHILD_TRADES_HAS_LETTER_ZELDA) ? CANT_OBTAIN_ALREADY_HAVE
+                                                                                  : CAN_OBTAIN;
 
         // Misc Items
         case RG_POCKET_EGG:
@@ -655,7 +651,6 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
 
         case RG_RECOVERY_HEART:
         case RG_GREEN_RUPEE:
-        case RG_GREG_RUPEE:
         case RG_BLUE_RUPEE:
         case RG_RED_RUPEE:
         case RG_PURPLE_RUPEE:
@@ -668,7 +663,16 @@ ItemObtainability Randomizer::GetItemObtainabilityFromRandomizerGet(RandomizerGe
         case RG_BUY_HEART:
         case RG_TRIFORCE_PIECE:
         case RG_TRIFORCE:
+            return CAN_OBTAIN;
+
         default:
+            // Items where possession is represented by a RandomizerInf
+            // Anything needing its own rule goes above
+            if (const auto it = Rando::StaticData::RandoGetToRandInf.find(randoGet);
+                it != Rando::StaticData::RandoGetToRandInf.end()) {
+                return Flags_GetRandomizerInf(static_cast<RandomizerInf>(it->second)) ? CANT_OBTAIN_ALREADY_HAVE
+                                                                                      : CAN_OBTAIN;
+            }
             return CAN_OBTAIN;
     }
 }
