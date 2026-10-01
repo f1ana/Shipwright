@@ -7,6 +7,7 @@
 
 #include "BossRush.h"
 #include "soh/ShipInit.hpp"
+#include "soh/SaveManager.h"
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "soh/frame_interpolation.h"
@@ -570,7 +571,10 @@ void BossRush_HandleCompleteBoss(PlayState* play) {
 extern "C" void BossRush_InitSave() {
 
     // Set player name to Lonk for the few textboxes that show up during Boss Rush. Player can't input their own name.
-    std::array<char, 8> brPlayerName = { 21, 50, 49, 46, 62, 62, 62, 62 };
+    std::array<u8, 8> brPlayerName = { 0x15, 0x32, 0x31, 0x2E, 0x3E, 0x3E, 0x3E, 0x3E };
+    if (gSaveContext.ship.filenameLanguage != NAME_LANGUAGE_PAL) {
+        brPlayerName = { 0xB6, 0xD3, 0xD2, 0xCF, 0xDF, 0xDF, 0xDF, 0xDF };
+    }
     for (int i = 0; i < ARRAY_COUNT(gSaveContext.playerName); i++) {
         gSaveContext.playerName[i] = brPlayerName[i];
     }
